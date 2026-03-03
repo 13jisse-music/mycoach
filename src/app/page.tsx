@@ -158,13 +158,10 @@ export default function SessionPage() {
       if (isSpeakingRef.current) return;
 
       // REBUILD full text from all results each time (no append = no duplicates)
-      // Each result = one speech segment (pause-separated) → line break between them
-      const segments: string[] = [];
+      let currentText = "";
       for (let i = 0; i < event.results.length; i++) {
-        const text = event.results[i][0].transcript.trim();
-        if (text) segments.push(text);
+        currentText += event.results[i][0].transcript + " ";
       }
-      const currentText = segments.join("\n") + "\n";
 
       transcriptRef.current = committedRef.current + currentText;
       setTranscript(transcriptRef.current);
@@ -472,7 +469,7 @@ export default function SessionPage() {
       </div>
 
       {/* Transcript area */}
-      <div className="flex-1 bg-white/5 rounded-2xl p-4 overflow-y-auto max-h-[40vh] text-sm leading-relaxed text-[#FAFAFA]/70 whitespace-pre-wrap">
+      <div className="flex-1 bg-white/5 rounded-2xl p-4 overflow-y-auto max-h-[40vh] text-sm leading-relaxed text-[#FAFAFA]/70">
         {transcript || (
           <span className="text-[#6B7280] italic">
             En écoute... parlez normalement
