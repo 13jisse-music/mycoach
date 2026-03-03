@@ -30,6 +30,11 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen antialiased">
         {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}`,
+          }}
+        />
       </body>
     </html>
   );
