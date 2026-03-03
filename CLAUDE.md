@@ -1,4 +1,4 @@
-# Assistant Coach — JC Martinez
+# MyCoach — JC Martinez
 
 ## Description
 Assistant IA discret pour coaching vocal/musical et développement personnel (PNL).

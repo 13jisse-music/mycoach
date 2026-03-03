@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1232"/>
+      <stop offset="100%" style="stop-color:#0d0b1a"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4AF37"/>
+      <stop offset="100%" style="stop-color:#C9A84C"/>
+    </linearGradient>
+  </defs>
+  <!-- Background rounded square -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+  <!-- Brain + Music note combined symbol -->
+  <!-- Left brain half -->
+  <path d="M180 160 C180 130, 210 110, 240 120 C250 100, 280 95, 295 110 C310 95, 340 100, 345 120 C365 115, 385 135, 375 160 C390 175, 388 200, 370 215 C380 235, 370 260, 350 265 C355 285, 340 300, 320 295 L320 330 C320 340, 310 345, 300 340 L290 335 C280 330, 275 320, 275 310 L275 285"
+        fill="none" stroke="url(#gold)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Center line -->
+  <line x1="275" y1="160" x2="275" y2="285" stroke="#C9A84C" stroke-width="3" stroke-dasharray="8,6" opacity="0.4"/>
+  <!-- Right side - music note -->
+  <path d="M275 285 C275 260, 310 255, 340 265 C355 260, 375 260, 375 280 C375 305, 345 315, 320 305 L320 295"
+        fill="none" stroke="url(#gold)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Musical note stem + flag -->
+  <line x1="375" y1="170" x2="375" y2="280" stroke="#C9A84C" stroke-width="10" stroke-linecap="round"/>
+  <path d="M375 170 C395 175, 410 195, 395 215" fill="none" stroke="#C9A84C" stroke-width="10" stroke-linecap="round"/>
+  <!-- Note head -->
+  <ellipse cx="365" cy="283" rx="22" ry="16" transform="rotate(-20, 365, 283)" fill="#C9A84C"/>
+  <!-- Pulse/wave line -->
+  <path d="M130 370 L190 370 L210 340 L230 400 L250 350 L270 390 L290 360 L310 370 L380 370"
+        fill="none" stroke="#8B5CF6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+  <!-- MyCoach text -->
+  <text x="256" y="445" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="52" fill="#FAFAFA" letter-spacing="3">
+    MyCoach
+  </text>
+</svg>

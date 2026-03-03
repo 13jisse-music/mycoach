@@ -239,7 +239,7 @@ export default function SessionPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-6 gap-8">
         <div className="text-4xl">🎓</div>
-        <h1 className="text-2xl font-bold text-center">Assistant Coach</h1>
+        <h1 className="text-2xl font-bold text-center">MyCoach</h1>
         <p className="text-[#6B7280] text-center max-w-sm text-sm">
           JC Martinez — Coaching vocal & Développement personnel
         </p>
