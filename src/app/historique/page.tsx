@@ -52,9 +52,8 @@ export default function HistoriquePage() {
         : sessions;
 
   const modeLabel = (m: string) =>
-    m === "pnl" ? "🧠 Dev. perso" : "🎵 Musique";
-  const modeColor = (m: string) =>
-    m === "pnl" ? "#8B5CF6" : "#C9A84C";
+    m === "music" ? "🎵 Musique" : "📋 Rapport";
+  const modeColor = () => "#8B5CF6";
 
   return (
     <div className="min-h-screen p-4 pb-20">

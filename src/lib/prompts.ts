@@ -50,7 +50,7 @@ export function buildCrossSessionPrompt(
   mode: string,
   summaries: { date: string; summary: string }[]
 ): string {
-  const modeLabel = mode === "pnl" ? "développement personnel" : "coaching musical";
+  const modeLabel = "accompagnement et développement personnel";
   const sessionsList = summaries
     .map((s, i) => `--- Séance ${i + 1} (${s.date}) ---\n${s.summary}`)
     .join("\n\n");
@@ -74,7 +74,7 @@ export function buildSessionSummaryPrompt(
   mode: string,
   transcript: string
 ): string {
-  const modeLabel = mode === "pnl" ? "développement personnel" : "coaching musical";
+  const modeLabel = "accompagnement et développement personnel";
   return `Tu es un assistant pour un praticien en ${modeLabel}.
 Voici la transcription complète d'une séance :
 

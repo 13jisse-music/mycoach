@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { saveSession, getSessions, syncSessions, generateId, type Session } from "@/lib/sessions";
 import { getClients, saveClient, syncClients, type Client } from "@/lib/clients";
 
-type Mode = "music" | "pnl";
+type Mode = "pnl";
 
 // ─── Speech Recognition type ────────────────────────────────
 interface SpeechRecognitionEvent {
@@ -65,7 +65,7 @@ function speak(text: string) {
 }
 
 export default function SessionPage() {
-  const [mode, setMode] = useState<Mode>("music");
+  const [mode] = useState<Mode>("pnl");
   const [isListening, setIsListening] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [transcript, setTranscript] = useState("");
@@ -320,7 +320,7 @@ export default function SessionPage() {
         <img src="/icon.png" alt="JCoach" className="w-20 h-20 rounded-2xl" />
         <h1 className="text-2xl font-bold text-center">JCoach</h1>
         <p className="text-[#6B7280] text-center max-w-sm text-sm">
-          JC Martinez — Coaching vocal & Développement personnel
+          JC Martinez — Coaching & Développement personnel
         </p>
 
         {/* Client selector */}
@@ -376,28 +376,9 @@ export default function SessionPage() {
           )}
         </div>
 
-        {/* Mode selector */}
-        <div className="flex gap-3">
-          <button
-            onClick={() => setMode("music")}
-            className={`px-5 py-3 rounded-xl font-medium transition-all ${
-              mode === "music"
-                ? "bg-[#C9A84C] text-black"
-                : "bg-white/10 text-[#6B7280]"
-            }`}
-          >
-            🎵 Musique
-          </button>
-          <button
-            onClick={() => setMode("pnl")}
-            className={`px-5 py-3 rounded-xl font-medium transition-all ${
-              mode === "pnl"
-                ? "bg-[#8B5CF6] text-white"
-                : "bg-white/10 text-[#6B7280]"
-            }`}
-          >
-            🧠 Dev. personnel
-          </button>
+        {/* Mode label */}
+        <div className="px-5 py-3 rounded-xl bg-[#8B5CF6] text-white font-medium">
+          📋 Rapport de rencontre
         </div>
 
         {/* Audio toggle */}
@@ -474,7 +455,7 @@ export default function SessionPage() {
   }
 
   // ─── Session screen ────────────────────────────────────────
-  const accentColor = mode === "music" ? "#C9A84C" : "#8B5CF6";
+  const accentColor = "#8B5CF6";
 
   return (
     <div className="flex min-h-screen flex-col p-4 gap-4 pb-32">
@@ -489,7 +470,7 @@ export default function SessionPage() {
             }}
           />
           <span className="text-sm font-medium" style={{ color: accentColor }}>
-            {mode === "music" ? "🎵 Musique" : "🧠 Dev. perso"}
+            📋 Rapport de rencontre
           </span>
           {selectedClient && (
             <span className="text-xs text-[#6B7280] bg-white/5 px-2 py-0.5 rounded-lg">

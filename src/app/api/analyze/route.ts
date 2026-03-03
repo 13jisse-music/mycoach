@@ -13,21 +13,18 @@ export async function POST(request: Request) {
   let prompt: string;
 
   if (action === "bilan" && clientName && summaries) {
-    prompt = buildCrossSessionPrompt(clientName, mode || "music", summaries);
+    prompt = buildCrossSessionPrompt(clientName, mode || "pnl", summaries);
   } else if (action === "summary") {
     if (!transcript) {
       return NextResponse.json({ error: "Pas de transcription" }, { status: 400 });
     }
-    prompt = buildSessionSummaryPrompt(mode || "music", transcript);
+    prompt = buildSessionSummaryPrompt(mode || "pnl", transcript);
   } else {
     if (!transcript) {
       return NextResponse.json({ error: "Pas de transcription" }, { status: 400 });
     }
-    if (mode === "pnl") {
-      prompt = buildPNLPrompt(transcript);
-    } else {
-      prompt = buildMusicPrompt(transcript);
-    }
+    // Default: PNL / Rapport de rencontre prompt
+    prompt = buildPNLPrompt(transcript);
   }
 
   const result = await aiCascade(

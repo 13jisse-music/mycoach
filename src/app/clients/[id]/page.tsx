@@ -102,9 +102,8 @@ export default function ClientDetailPage() {
   };
 
   const modeLabel = (m: string) =>
-    m === "pnl" ? "🧠 Dev. perso" : "🎵 Musique";
-  const modeColor = (m: string) =>
-    m === "pnl" ? "#8B5CF6" : "#C9A84C";
+    m === "music" ? "🎵 Musique" : "📋 Rapport";
+  const modeColor = () => "#8B5CF6";
 
   if (!client) {
     return (
@@ -142,7 +141,7 @@ export default function ClientDetailPage() {
           <div className="text-lg font-bold text-[#8B5CF6]">
             {sessions.filter((s) => s.mode === "pnl").length}
           </div>
-          <div className="text-[10px] text-[#6B7280] uppercase">PNL</div>
+          <div className="text-[10px] text-[#6B7280] uppercase">Rapports</div>
         </div>
       </div>
 
