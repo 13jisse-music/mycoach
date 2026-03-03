@@ -92,7 +92,6 @@ export default function SessionPage() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shouldRestartRef = useRef(false);
   const isSpeakingRef = useRef(false); // true = TTS en cours, ignorer le mic
-  const lastSegmentsRef = useRef<string[]>([]); // Track last segments for dedup
 
   // Load clients and session count (local first, then sync from Supabase)
   useEffect(() => {
@@ -161,31 +160,15 @@ export default function SessionPage() {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
-          const segment = result[0].transcript.trim();
-          if (!segment) continue;
-
-          // Dedup 1: exact match at end of transcript
-          const currentEnd = transcriptRef.current.trim().slice(-(segment.length + 30));
-          if (currentEnd.includes(segment)) continue;
-
-          // Dedup 2: similarity with recent segments (catches dual-mic near-duplicates)
-          const normalized = segment.toLowerCase().replace(/[.,!?;:]/g, "").trim();
-          const isDup = lastSegmentsRef.current.some((prev) => {
-            const prevNorm = prev.toLowerCase().replace(/[.,!?;:]/g, "").trim();
-            return (
-              normalized === prevNorm ||
-              normalized.includes(prevNorm) ||
-              prevNorm.includes(normalized)
-            );
-          });
-          if (isDup) continue;
-
-          lastSegmentsRef.current.push(segment);
-          if (lastSegmentsRef.current.length > 5) lastSegmentsRef.current.shift();
-          finalText += segment + " ";
+          finalText += result[0].transcript + " ";
         }
       }
       if (finalText) {
+        // Light dedup: skip only if this exact text just appeared at the end
+        const trimmed = finalText.trim();
+        const lastChunk = transcriptRef.current.trim().slice(-trimmed.length).trim();
+        if (trimmed && lastChunk === trimmed) return;
+
         transcriptRef.current += finalText;
         setTranscript(transcriptRef.current);
       }
@@ -306,7 +289,6 @@ export default function SessionPage() {
     setTranscript("");
     transcriptRef.current = "";
     suggestionsRef.current = [];
-    lastSegmentsRef.current = [];
     sessionIdRef.current = generateId();
     setLastSuggestion("");
     setSessionTime(0);
