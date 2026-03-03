@@ -87,6 +87,7 @@ export default function SessionPage() {
 
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const transcriptRef = useRef("");
+  const committedRef = useRef(""); // Text committed from previous recognition sessions
   const suggestionsRef = useRef<string[]>([]);
   const sessionIdRef = useRef(generateId());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -149,28 +150,27 @@ export default function SessionPage() {
 
     const recognition = new SR();
     recognition.continuous = true;
-    recognition.interimResults = false; // IMPORTANT: false = only complete sentences, no word-by-word duplication
+    recognition.interimResults = true;
     recognition.lang = "fr-FR";
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       // Ignore audio captured while TTS is speaking (prevents echo)
       if (isSpeakingRef.current) return;
 
-      let finalText = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i];
-        if (result.isFinal) {
-          finalText += result[0].transcript + " ";
-        }
+      // REBUILD full text from all results each time (no append = no duplicates)
+      let currentText = "";
+      for (let i = 0; i < event.results.length; i++) {
+        currentText += event.results[i][0].transcript + " ";
       }
-      if (finalText) {
-        transcriptRef.current += finalText;
-        setTranscript(transcriptRef.current);
-      }
+
+      transcriptRef.current = committedRef.current + currentText;
+      setTranscript(transcriptRef.current);
     };
 
     recognition.onend = () => {
-      // Auto-restart silently (continuous mode drops after ~60s of silence)
+      // Commit current text before restart (results array resets on start())
+      committedRef.current = transcriptRef.current;
+
       if (shouldRestartRef.current) {
         try {
           recognition.start();
@@ -283,6 +283,7 @@ export default function SessionPage() {
     stopListening();
     setTranscript("");
     transcriptRef.current = "";
+    committedRef.current = "";
     suggestionsRef.current = [];
     sessionIdRef.current = generateId();
     setLastSuggestion("");
