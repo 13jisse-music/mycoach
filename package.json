@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "prebuild": "node -e \"const fs=require('fs');const{execSync}=require('child_process');if(\\!fs.existsSync('.next'))fs.mkdirSync('.next');try{execSync('attrib +S .next',{stdio:'ignore'})}catch(e){}\""
+    "prebuild": "node -e \"const fs=require('fs');const{execSync}=require('child_process');if(!fs.existsSync('.next'))fs.mkdirSync('.next');try{execSync('attrib +S .next',{stdio:'ignore'})}catch(e){}\""
   },
   "dependencies": {
     "next": "16.1.6",
