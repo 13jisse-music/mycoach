@@ -149,7 +149,7 @@ export default function SessionPage() {
 
     const recognition = new SR();
     recognition.continuous = true;
-    recognition.interimResults = true;
+    recognition.interimResults = false; // IMPORTANT: false = only complete sentences, no word-by-word duplication
     recognition.lang = "fr-FR";
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -164,11 +164,6 @@ export default function SessionPage() {
         }
       }
       if (finalText) {
-        // Light dedup: skip only if this exact text just appeared at the end
-        const trimmed = finalText.trim();
-        const lastChunk = transcriptRef.current.trim().slice(-trimmed.length).trim();
-        if (trimmed && lastChunk === trimmed) return;
-
         transcriptRef.current += finalText;
         setTranscript(transcriptRef.current);
       }
