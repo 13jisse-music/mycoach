@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { saveSession, getSessions, generateId, type Session } from "@/lib/sessions";
-import { getClients, saveClient, type Client } from "@/lib/clients";
+import { saveSession, getSessions, syncSessions, generateId, type Session } from "@/lib/sessions";
+import { getClients, saveClient, syncClients, type Client } from "@/lib/clients";
 
 type Mode = "music" | "pnl";
 
@@ -30,10 +30,18 @@ declare global {
   }
 }
 
-// ─── Speak function (plays through Bluetooth = glasses speakers) ─
+// ─── Speak function with echo prevention ─────────────────────
+// Pauses speech recognition while speaking, then resumes after
+let pauseRecognitionFn: (() => void) | null = null;
+let resumeRecognitionFn: (() => void) | null = null;
+
 function speak(text: string) {
   if (!("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
+
+  // Pause mic to prevent echo
+  pauseRecognitionFn?.();
+
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "fr-FR";
   utterance.rate = 1.05;
@@ -44,6 +52,15 @@ function speak(text: string) {
     (v) => v.lang.startsWith("fr") && v.name.includes("Google")
   ) || voices.find((v) => v.lang.startsWith("fr"));
   if (frVoice) utterance.voice = frVoice;
+
+  // Resume mic after speech ends + small delay
+  utterance.onend = () => {
+    setTimeout(() => resumeRecognitionFn?.(), 300);
+  };
+  utterance.onerror = () => {
+    setTimeout(() => resumeRecognitionFn?.(), 300);
+  };
+
   window.speechSynthesis.speak(utterance);
 }
 
@@ -71,11 +88,15 @@ export default function SessionPage() {
   const sessionIdRef = useRef(generateId());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shouldRestartRef = useRef(false);
+  const isSpeakingRef = useRef(false); // true = TTS en cours, ignorer le mic
 
-  // Load clients and session count
+  // Load clients and session count (local first, then sync from Supabase)
   useEffect(() => {
     setRecentCount(getSessions().length);
     setClients(getClients());
+    // Sync in background
+    syncClients().then((c) => setClients(c));
+    syncSessions().then((s) => setRecentCount(s.length));
   }, []);
 
   // ─── Timer ─────────────────────────────────────────────────
@@ -129,6 +150,9 @@ export default function SessionPage() {
     recognition.lang = "fr-FR";
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
+      // Ignore audio captured while TTS is speaking (prevents echo)
+      if (isSpeakingRef.current) return;
+
       let finalText = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
@@ -164,6 +188,14 @@ export default function SessionPage() {
     shouldRestartRef.current = true;
     recognition.start();
     setIsListening(true);
+
+    // Connect pause/resume for echo prevention
+    pauseRecognitionFn = () => {
+      isSpeakingRef.current = true;
+    };
+    resumeRecognitionFn = () => {
+      isSpeakingRef.current = false;
+    };
   }, []);
 
   // ─── Stop listening ────────────────────────────────────────
