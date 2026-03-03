@@ -106,7 +106,7 @@ export default function HistoriquePage() {
                 >
                   <div
                     className="w-2 h-10 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: modeColor(s.mode) }}
+                    style={{ backgroundColor: modeColor() }}
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -142,7 +142,7 @@ export default function HistoriquePage() {
                       <div className="mt-3">
                         <div
                           className="text-xs font-bold uppercase mb-1.5"
-                          style={{ color: modeColor(s.mode) }}
+                          style={{ color: modeColor() }}
                         >
                           📝 Résumé
                         </div>
@@ -156,7 +156,7 @@ export default function HistoriquePage() {
                       <div className="mt-4">
                         <div
                           className="text-xs font-bold uppercase mb-1.5"
-                          style={{ color: modeColor(s.mode) }}
+                          style={{ color: modeColor() }}
                         >
                           💡 Suggestions ({s.suggestions.length})
                         </div>

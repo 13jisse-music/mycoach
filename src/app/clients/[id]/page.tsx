@@ -334,7 +334,7 @@ export default function ClientDetailPage() {
               >
                 <div
                   className="w-2 h-10 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: modeColor(s.mode) }}
+                  style={{ backgroundColor: modeColor() }}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -357,7 +357,7 @@ export default function ClientDetailPage() {
                 <div className="px-4 pb-4 border-t border-white/5">
                   {s.summary && (
                     <div className="mt-3">
-                      <div className="text-xs font-bold uppercase mb-1.5" style={{ color: modeColor(s.mode) }}>
+                      <div className="text-xs font-bold uppercase mb-1.5" style={{ color: modeColor() }}>
                         📝 Résumé
                       </div>
                       <div className="text-sm text-[#FAFAFA]/80 whitespace-pre-wrap leading-relaxed">
@@ -368,7 +368,7 @@ export default function ClientDetailPage() {
 
                   {s.suggestions.length > 0 && (
                     <div className="mt-4">
-                      <div className="text-xs font-bold uppercase mb-1.5" style={{ color: modeColor(s.mode) }}>
+                      <div className="text-xs font-bold uppercase mb-1.5" style={{ color: modeColor() }}>
                         💡 Suggestions ({s.suggestions.length})
                       </div>
                       <div className="flex flex-col gap-2">
