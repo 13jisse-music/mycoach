@@ -307,6 +307,13 @@ export default function SessionPage() {
     }
   };
 
+  // ─── Auto-start mic when session begins ─────────────────
+  useEffect(() => {
+    if (consentGiven && !isListening && !sessionSaved) {
+      startListening();
+    }
+  }, [consentGiven]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ─── Detect if PC (for QR code button) ──────────────────
   const isPC = typeof window !== "undefined" && !("ontouchstart" in window);
 
@@ -317,11 +324,7 @@ export default function SessionPage() {
   if (!consentGiven) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-6 gap-6">
-        <img src="/icon.png" alt="JCoach" className="w-20 h-20 rounded-2xl" />
-        <h1 className="text-2xl font-bold text-center">JCoach</h1>
-        <p className="text-[#6B7280] text-center max-w-sm text-sm">
-          JC Martinez — Coaching & Développement personnel
-        </p>
+        <img src="/icon.png" alt="JCoach" className="w-32 h-32 rounded-3xl" />
 
         {/* Client selector */}
         <div className="w-full max-w-xs">
@@ -376,11 +379,6 @@ export default function SessionPage() {
           )}
         </div>
 
-        {/* Mode label */}
-        <div className="px-5 py-3 rounded-xl bg-[#8B5CF6] text-white font-medium">
-          📋 Rapport de rencontre
-        </div>
-
         {/* Audio toggle */}
         <label className="flex items-center gap-3 text-sm text-[#6B7280]">
           <input
@@ -392,9 +390,12 @@ export default function SessionPage() {
           Réponse audio (lunettes)
         </label>
 
-        {/* Start button */}
+        {/* Start button — lance le micro immédiatement */}
         <button
-          onClick={() => setConsentGiven(true)}
+          onClick={() => {
+            setConsentGiven(true);
+            // Le micro démarre automatiquement via useEffect ci-dessous
+          }}
           className="w-full max-w-xs py-4 bg-[#22C55E] text-black font-bold text-lg rounded-2xl active:scale-95 transition-transform"
         >
           Démarrer la séance
@@ -455,28 +456,24 @@ export default function SessionPage() {
   }
 
   // ─── Session screen ────────────────────────────────────────
-  const accentColor = "#8B5CF6";
-
   return (
-    <div className="flex min-h-screen flex-col p-4 gap-4 pb-32">
-      {/* Header */}
+    <div className="flex min-h-screen flex-col p-4 gap-4 pb-40">
+      {/* Header — client + timer + status */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div
             className="w-3 h-3 rounded-full"
             style={{
-              backgroundColor: isListening ? "#22C55E" : "#6B7280",
+              backgroundColor: isListening ? "#22C55E" : "#EF4444",
               boxShadow: isListening ? "0 0 12px #22C55E" : "none",
             }}
           />
-          <span className="text-sm font-medium" style={{ color: accentColor }}>
-            📋 Rapport de rencontre
+          <span className="text-sm font-medium text-[#FAFAFA]">
+            {selectedClient ? selectedClient.name : "Séance en cours"}
           </span>
-          {selectedClient && (
-            <span className="text-xs text-[#6B7280] bg-white/5 px-2 py-0.5 rounded-lg">
-              {selectedClient.name}
-            </span>
-          )}
+          <span className="text-xs text-[#6B7280]">
+            {isListening ? "En écoute" : "Pause"}
+          </span>
         </div>
         <span className="font-mono text-lg text-[#6B7280]">
           {formatTime(sessionTime)}
@@ -484,42 +481,31 @@ export default function SessionPage() {
       </div>
 
       {/* Transcript area */}
-      <div className="flex-1 bg-white/5 rounded-2xl p-4 overflow-y-auto max-h-[30vh] text-sm leading-relaxed text-[#FAFAFA]/70">
+      <div className="flex-1 bg-white/5 rounded-2xl p-4 overflow-y-auto max-h-[40vh] text-sm leading-relaxed text-[#FAFAFA]/70">
         {transcript || (
           <span className="text-[#6B7280] italic">
-            {isListening
-              ? "En écoute... parlez normalement"
-              : "Appuyez sur Écouter pour commencer"}
+            En écoute... parlez normalement
           </span>
         )}
       </div>
 
       {/* AI Suggestion */}
       {lastSuggestion && (
-        <div
-          className="rounded-2xl p-4 text-sm leading-relaxed border"
-          style={{
-            borderColor: accentColor + "40",
-            backgroundColor: accentColor + "10",
-          }}
-        >
-          <div
-            className="text-xs font-bold uppercase mb-2"
-            style={{ color: accentColor }}
-          >
+        <div className="rounded-2xl p-4 text-sm leading-relaxed border border-[#8B5CF6]/30 bg-[#8B5CF6]/10">
+          <div className="text-xs font-bold uppercase mb-2 text-[#8B5CF6]">
             💡 Suggestion IA
           </div>
           <div className="whitespace-pre-wrap">{lastSuggestion}</div>
         </div>
       )}
 
-      {/* Bottom controls */}
+      {/* Bottom controls — 3 boutons : Pause/Play, Aide IA, Fin */}
       <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A] to-transparent p-4 pt-8">
-        <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
-          {/* Listen toggle */}
+        <div className="flex items-center justify-center gap-5 max-w-md mx-auto">
+          {/* PAUSE / REPRENDRE */}
           <button
             onClick={isListening ? stopListening : startListening}
-            className="w-16 h-16 rounded-full flex items-center justify-center text-2xl transition-all active:scale-90 relative"
+            className="w-16 h-16 rounded-full flex flex-col items-center justify-center transition-all active:scale-90 relative"
             style={{
               backgroundColor: isListening ? "#EF4444" : "#22C55E",
             }}
@@ -530,52 +516,70 @@ export default function SessionPage() {
                 style={{ border: "3px solid #EF4444" }}
               />
             )}
-            {isListening ? "⏸" : "🎙"}
+            <span className="text-2xl">{isListening ? "⏸" : "▶"}</span>
           </button>
 
-          {/* ASK AI — Le bouton magique */}
+          {/* AIDE IA — Le bouton central */}
           <button
             onClick={askAI}
             disabled={isAnalyzing || !transcript}
-            className="w-20 h-20 rounded-full flex items-center justify-center text-3xl transition-all active:scale-90 disabled:opacity-30 relative"
+            className="w-20 h-20 rounded-full flex flex-col items-center justify-center transition-all active:scale-90 disabled:opacity-30 relative bg-[#8B5CF6]"
             style={{
-              backgroundColor: accentColor,
-              boxShadow: `0 0 30px ${accentColor}40`,
+              boxShadow: "0 0 30px rgba(139, 92, 246, 0.25)",
             }}
           >
             {isAnalyzing ? (
               <span className="animate-spin text-2xl">⏳</span>
             ) : (
-              "💡"
+              <span className="text-3xl">💡</span>
             )}
           </button>
 
-          {/* End session */}
+          {/* FIN DE SÉANCE */}
           <button
-            onClick={endSession}
-            className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-2xl transition-all active:scale-90"
+            onClick={() => {
+              if (sessionSaved) {
+                resetSession();
+              } else if (transcript.trim()) {
+                endSession();
+              }
+            }}
+            className="w-16 h-16 rounded-full flex flex-col items-center justify-center transition-all active:scale-90"
+            style={{
+              backgroundColor: sessionSaved ? "#22C55E" : "rgba(255,255,255,0.1)",
+            }}
           >
-            ⏹
+            <span className="text-2xl">{sessionSaved ? "✓" : "⏹"}</span>
           </button>
         </div>
 
-        {/* Quick actions */}
-        <div className="flex justify-center gap-3 mt-3">
-          {sessionSaved ? (
+        {/* Labels sous les boutons */}
+        <div className="flex items-center justify-center gap-5 max-w-md mx-auto mt-1">
+          <span className="w-16 text-center text-[10px] text-[#6B7280]">
+            {isListening ? "Pause" : "Reprendre"}
+          </span>
+          <span className="w-20 text-center text-[10px] text-[#8B5CF6]">
+            {isAnalyzing ? "Analyse..." : "Aide"}
+          </span>
+          <span className="w-16 text-center text-[10px] text-[#6B7280]">
+            {sessionSaved ? "Nouvelle" : "Terminer"}
+          </span>
+        </div>
+
+        {/* Post-session link */}
+        {sessionSaved && (
+          <div className="flex justify-center mt-3">
             <a
               href={selectedClientId ? `/clients/${selectedClientId}` : "/historique"}
-              className="text-xs text-[#22C55E] px-3 py-1.5 rounded-lg bg-[#22C55E]/10"
+              className="text-xs text-[#22C55E] px-4 py-2 rounded-lg bg-[#22C55E]/10"
             >
-              ✓ Sauvegardée — Voir {selectedClient ? selectedClient.name : "l\u0027historique"}
+              ✓ Sauvegardée — Voir {selectedClient ? selectedClient.name : "l'historique"}
             </a>
-          ) : (
-            <button
-              onClick={resetSession}
-              className="text-xs text-[#6B7280] px-3 py-1.5 rounded-lg bg-white/5"
-            >
-              Nouvelle séance
-            </button>
-          )}
+          </div>
+        )}
+
+        {/* Audio toggle discret */}
+        <div className="flex justify-center mt-2">
           <button
             onClick={() => setSpeakEnabled(!speakEnabled)}
             className="text-xs px-3 py-1.5 rounded-lg bg-white/5"
