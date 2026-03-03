@@ -1,6 +1,6 @@
 {
-  "name": "MyCoach — JC Martinez",
-  "short_name": "MyCoach",
+  "name": "JCoach — JC Martinez",
+  "short_name": "JCoach",
   "description": "Assistant IA pour coaching vocal et développement personnel",
   "start_url": "/",
   "display": "standalone",
@@ -9,10 +9,15 @@
   "orientation": "portrait",
   "icons": [
     {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
       "src": "/icon.svg",
       "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/svg+xml"
     }
   ]
 }
