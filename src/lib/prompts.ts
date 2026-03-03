@@ -90,3 +90,39 @@ Génère un résumé structuré :
 
 Sois concis et professionnel. Réponds en français.`;
 }
+
+export function buildHypnoScriptPrompt(
+  clientName: string,
+  keywords: string[],
+  theme: string,
+  transcripts: string
+): string {
+  const keywordsStr = keywords.join(", ");
+  return `Tu es un expert en hypnose ericksonienne et en PNL.
+Crée un script d'hypnose personnalisé pour le client "${clientName}".
+
+**Thème de la séance :** ${theme}
+
+**Mots-clés importants du client** (extraits de ses séances précédentes, à intégrer naturellement dans les métaphores et suggestions) :
+${keywordsStr}
+
+**Extraits de séances précédentes :**
+${transcripts}
+
+**Structure du script :**
+1. **Induction** (relaxation progressive, 2-3 paragraphes)
+2. **Approfondissement** (escalier ou lieu de sécurité, 1-2 paragraphes)
+3. **Partie thérapeutique** (métaphore personnalisée utilisant les mots-clés du client, 3-4 paragraphes)
+4. **Suggestions post-hypnotiques** (2-3 suggestions courtes et positives)
+5. **Réveil** (comptage 1-5, 1 paragraphe)
+
+**Règles :**
+- Utiliser le tutoiement
+- Intégrer les mots et expressions propres au client (saupoudrage)
+- Les métaphores doivent résonner avec le vécu du client
+- Langage permissif ("tu peux", "peut-être", "il est possible que...")
+- Marquer les suggestions embarquées en MAJUSCULES
+- Ajouter des "..." pour les pauses
+
+Réponds en français. Le script doit faire environ 800-1200 mots.`;
+}

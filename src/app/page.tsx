@@ -439,6 +439,38 @@ export default function SessionPage() {
             </div>
             <span className="text-[#6B7280]">›</span>
           </a>
+
+          <a
+            href="/exercices"
+            className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 active:bg-white/10 transition-colors"
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#22C55E]/20 flex items-center justify-center text-2xl">
+              📚
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-medium text-[#FAFAFA]">Exercices</div>
+              <div className="text-xs text-[#6B7280]">
+                PNL · Hypnose · Dev. perso
+              </div>
+            </div>
+            <span className="text-[#6B7280]">›</span>
+          </a>
+
+          <a
+            href="/agenda"
+            className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 active:bg-white/10 transition-colors"
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#3B82F6]/20 flex items-center justify-center text-2xl">
+              📅
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-medium text-[#FAFAFA]">Agenda</div>
+              <div className="text-xs text-[#6B7280]">
+                Rendez-vous & planning
+              </div>
+            </div>
+            <span className="text-[#6B7280]">›</span>
+          </a>
         </div>
 
         {/* Sync + QR */}

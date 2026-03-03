@@ -34,6 +34,10 @@ export default function ClientDetailPage() {
   const [notes, setNotes] = useState("");
   const [bilan, setBilan] = useState("");
   const [isBilanLoading, setIsBilanLoading] = useState(false);
+  const [hypnoScript, setHypnoScript] = useState("");
+  const [isHypnoLoading, setIsHypnoLoading] = useState(false);
+  const [showHypnoForm, setShowHypnoForm] = useState(false);
+  const [hypnoTheme, setHypnoTheme] = useState("");
 
   useEffect(() => {
     const c = getClient(clientId);
@@ -187,6 +191,120 @@ export default function ClientDetailPage() {
             </div>
             <div className="text-sm text-[#FAFAFA]/80 whitespace-pre-wrap leading-relaxed">
               {bilan}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Script d'hypnose personnalisé */}
+      <div className="mb-6">
+        {!showHypnoForm ? (
+          <button
+            onClick={() => setShowHypnoForm(true)}
+            disabled={sessions.length === 0}
+            className="w-full py-3 bg-gradient-to-r from-[#8B5CF6]/20 to-[#C9A84C]/20 border border-[#8B5CF6]/30 rounded-2xl text-sm font-medium text-[#8B5CF6] disabled:opacity-30 active:scale-[0.98] transition-transform"
+          >
+            🎭 Créer un script d&apos;hypnose personnalisé
+          </button>
+        ) : (
+          <div className="bg-white/5 rounded-2xl p-4 border border-[#8B5CF6]/20">
+            <div className="text-xs font-bold uppercase mb-3 text-[#8B5CF6]">
+              🎭 Script d&apos;hypnose — {client.name}
+            </div>
+            <label className="text-[10px] text-[#6B7280] uppercase block mb-1">
+              Thème / Objectif de la séance
+            </label>
+            <input
+              type="text"
+              value={hypnoTheme}
+              onChange={(e) => setHypnoTheme(e.target.value)}
+              placeholder="Ex: confiance en soi, gestion du stress, lâcher prise..."
+              className="w-full bg-white/5 text-sm text-[#FAFAFA]/80 rounded-lg px-3 py-2 border border-white/10 focus:outline-none focus:border-[#8B5CF6]/50 mb-3"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setShowHypnoForm(false); setHypnoTheme(""); }}
+                className="flex-1 py-2.5 rounded-xl bg-white/5 text-[#6B7280] text-sm"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={async () => {
+                  if (!hypnoTheme.trim()) return;
+                  setIsHypnoLoading(true);
+                  setHypnoScript("");
+
+                  // Extract keywords from transcripts
+                  const allTranscripts = sessions
+                    .map((s) => s.transcript)
+                    .filter(Boolean)
+                    .join(" ");
+                  // Simple keyword extraction: frequent meaningful words
+                  const words = allTranscripts.toLowerCase().split(/\s+/);
+                  const stopWords = new Set(["je", "tu", "il", "elle", "on", "nous", "vous", "ils", "de", "la", "le", "les", "un", "une", "des", "et", "ou", "mais", "que", "qui", "ce", "ça", "est", "a", "ai", "as", "en", "dans", "sur", "pour", "par", "avec", "pas", "ne", "plus", "très", "bien", "fait", "être", "avoir", "faire", "dire", "cette", "son", "sa", "ses", "mon", "ma", "mes", "ton", "ta", "tes", "du", "au", "aux", "se", "si", "tout", "comme", "quand", "aussi", "même"]);
+                  const freq: Record<string, number> = {};
+                  words.forEach((w) => {
+                    if (w.length > 3 && !stopWords.has(w)) {
+                      freq[w] = (freq[w] || 0) + 1;
+                    }
+                  });
+                  const keywords = Object.entries(freq)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 20)
+                    .map(([w]) => w);
+
+                  const transcriptExcerpts = sessions
+                    .filter((s) => s.transcript)
+                    .slice(0, 3)
+                    .map((s) => s.transcript.slice(0, 500))
+                    .join("\n---\n");
+
+                  try {
+                    const res = await fetch("/api/analyze", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        action: "hypno-script",
+                        clientName: client.name,
+                        keywords,
+                        theme: hypnoTheme,
+                        transcripts: transcriptExcerpts,
+                      }),
+                    });
+                    const data = await res.json();
+                    setHypnoScript(data.text || "Erreur lors de la génération.");
+                  } catch {
+                    setHypnoScript("Erreur de connexion.");
+                  } finally {
+                    setIsHypnoLoading(false);
+                  }
+                }}
+                disabled={isHypnoLoading || !hypnoTheme.trim()}
+                className="flex-1 py-2.5 rounded-xl bg-[#8B5CF6] text-white text-sm font-medium disabled:opacity-30"
+              >
+                {isHypnoLoading ? "⏳ Génération..." : "Générer le script"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {hypnoScript && (
+          <div className="mt-3 bg-white/5 rounded-2xl p-4 border border-[#8B5CF6]/20">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-xs font-bold uppercase text-[#8B5CF6]">
+                🎭 Script — {hypnoTheme}
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(hypnoScript);
+                }}
+                className="text-[10px] text-[#6B7280] px-2 py-1 rounded bg-white/5"
+              >
+                Copier
+              </button>
+            </div>
+            <div className="text-sm text-[#FAFAFA]/80 whitespace-pre-wrap leading-relaxed max-h-[50vh] overflow-y-auto">
+              {hypnoScript}
             </div>
           </div>
         )}

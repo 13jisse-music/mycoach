@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import AppMenu from "@/components/AppMenu";
 
 export const metadata: Metadata = {
   title: "JCoach — JC Martinez",
@@ -29,6 +30,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body className="min-h-screen antialiased">
+        <AppMenu />
         {children}
         <script
           dangerouslySetInnerHTML={{

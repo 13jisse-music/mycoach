@@ -5,14 +5,17 @@ import {
   buildPNLPrompt,
   buildSessionSummaryPrompt,
   buildCrossSessionPrompt,
+  buildHypnoScriptPrompt,
 } from "@/lib/prompts";
 
 export async function POST(request: Request) {
-  const { transcript, mode, action, clientName, summaries } = await request.json();
+  const { transcript, mode, action, clientName, summaries, keywords, theme, transcripts } = await request.json();
 
   let prompt: string;
 
-  if (action === "bilan" && clientName && summaries) {
+  if (action === "hypno-script" && clientName) {
+    prompt = buildHypnoScriptPrompt(clientName, keywords || [], theme || "", transcripts || "");
+  } else if (action === "bilan" && clientName && summaries) {
     prompt = buildCrossSessionPrompt(clientName, mode || "pnl", summaries);
   } else if (action === "summary") {
     if (!transcript) {
