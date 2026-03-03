@@ -117,9 +117,9 @@ export default function ClientsPage() {
                   e.stopPropagation();
                   handleDelete(c.id, c.name);
                 }}
-                className="text-xs text-red-400/40 hover:text-red-400 px-2 py-1"
+                className="text-sm text-red-400 bg-red-400/10 hover:bg-red-400/20 px-3 py-2 rounded-lg font-medium"
               >
-                ✕
+                Supprimer
               </button>
             </a>
           ))}

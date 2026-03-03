@@ -81,6 +81,9 @@ export default function SessionPage() {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [showAddClient, setShowAddClient] = useState(false);
   const [newClientName, setNewClientName] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState("");
+  const [showQR, setShowQR] = useState(false);
 
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const transcriptRef = useRef("");
@@ -287,6 +290,26 @@ export default function SessionPage() {
     setConsentGiven(false);
   };
 
+  // ─── Manual sync ──────────────────────────────────────────
+  const handleSync = async () => {
+    setIsSyncing(true);
+    setSyncStatus("");
+    try {
+      const c = await syncClients();
+      const s = await syncSessions();
+      setClients(c);
+      setRecentCount(s.length);
+      setSyncStatus(`${c.length} client${c.length > 1 ? "s" : ""}, ${s.length} séance${s.length > 1 ? "s" : ""}`);
+    } catch {
+      setSyncStatus("Erreur de sync");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // ─── Detect if PC (for QR code button) ──────────────────
+  const isPC = typeof window !== "undefined" && !("ontouchstart" in window);
+
   // ─── Selected client name ────────────────────────────────
   const selectedClient = clients.find((c) => c.id === selectedClientId);
 
@@ -401,23 +424,49 @@ export default function SessionPage() {
           de notes assistée par IA.
         </p>
 
-        {/* Navigation links */}
-        <div className="flex gap-4">
-          {recentCount > 0 && (
+        {/* Navigation + Sync */}
+        <div className="w-full max-w-xs flex flex-col gap-2">
+          <div className="flex gap-2">
             <a
               href="/historique"
-              className="text-sm text-[#6B7280] underline underline-offset-4"
+              className="flex-1 text-center text-sm py-2.5 rounded-xl bg-white/5 text-[#6B7280]"
             >
               📋 {recentCount} séance{recentCount > 1 ? "s" : ""}
             </a>
-          )}
-          {clients.length > 0 && (
             <a
               href="/clients"
-              className="text-sm text-[#6B7280] underline underline-offset-4"
+              className="flex-1 text-center text-sm py-2.5 rounded-xl bg-white/5 text-[#6B7280]"
             >
               👥 {clients.length} client{clients.length > 1 ? "s" : ""}
             </a>
+          </div>
+          <button
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="w-full text-sm py-2.5 rounded-xl bg-white/5 text-[#C9A84C] active:bg-white/10 transition-colors disabled:opacity-50"
+          >
+            {isSyncing ? "⏳ Synchronisation..." : "🔄 Synchroniser"}
+          </button>
+          {syncStatus && (
+            <p className="text-xs text-center text-[#22C55E]">✓ {syncStatus}</p>
+          )}
+          {isPC && (
+            <button
+              onClick={() => setShowQR(!showQR)}
+              className="w-full text-sm py-2.5 rounded-xl bg-white/5 text-[#6B7280] active:bg-white/10"
+            >
+              📱 {showQR ? "Masquer" : "QR Code mobile"}
+            </button>
+          )}
+          {showQR && (
+            <div className="flex flex-col items-center gap-2 p-4 bg-white/5 rounded-xl">
+              <img
+                src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://jcoach.netlify.app&color=C9A84C&bgcolor=0A0A0A"
+                alt="QR Code"
+                className="w-48 h-48 rounded-lg"
+              />
+              <p className="text-xs text-[#6B7280]">Scanne pour ouvrir sur le téléphone</p>
+            </div>
           )}
         </div>
       </div>
