@@ -31,7 +31,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen antialiased">
         <AppMenu />
+        <div className="lg:ml-56">
         {children}
+        </div>
         <script
           dangerouslySetInnerHTML={{
             __html: `if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}`,

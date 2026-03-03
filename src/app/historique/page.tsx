@@ -174,14 +174,14 @@ export default function HistoriquePage() {
                     )}
 
                     {s.transcript && (
-                      <details className="mt-4">
-                        <summary className="text-xs text-[#6B7280] cursor-pointer">
-                          Transcription ({s.transcript.split(" ").length} mots)
-                        </summary>
-                        <div className="mt-2 text-xs text-[#FAFAFA]/40 max-h-40 overflow-y-auto leading-relaxed">
+                      <div className="mt-4">
+                        <div className="text-xs font-bold uppercase mb-1.5 text-[#6B7280]">
+                          🎙 Transcription ({s.transcript.split(" ").length} mots)
+                        </div>
+                        <div className="text-xs text-[#FAFAFA]/50 max-h-48 overflow-y-auto leading-relaxed bg-white/[0.03] rounded-lg p-3">
                           {s.transcript}
                         </div>
-                      </details>
+                      </div>
                     )}
 
                     <button

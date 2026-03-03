@@ -160,7 +160,12 @@ export default function SessionPage() {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
-          finalText += result[0].transcript + " ";
+          const segment = result[0].transcript.trim();
+          if (!segment) continue;
+          // Deduplication: skip if this segment already appears at the end of transcript
+          const currentEnd = transcriptRef.current.trim().slice(-(segment.length + 30));
+          if (currentEnd.includes(segment)) continue;
+          finalText += segment + " ";
         }
       }
       if (finalText) {
@@ -405,73 +410,6 @@ export default function SessionPage() {
           En démarrant, vous confirmez le consentement du client pour la prise
           de notes assistée par IA.
         </p>
-
-        {/* Dossiers — gros boutons bien visibles */}
-        <div className="w-full max-w-xs flex flex-col gap-3">
-          <a
-            href="/clients"
-            className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 active:bg-white/10 transition-colors"
-          >
-            <div className="w-12 h-12 rounded-xl bg-[#C9A84C]/20 flex items-center justify-center text-2xl">
-              👥
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-medium text-[#FAFAFA]">Mes clients</div>
-              <div className="text-xs text-[#6B7280]">
-                {clients.length} client{clients.length > 1 ? "s" : ""} · Dossiers & bilans IA
-              </div>
-            </div>
-            <span className="text-[#6B7280]">›</span>
-          </a>
-
-          <a
-            href="/historique"
-            className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 active:bg-white/10 transition-colors"
-          >
-            <div className="w-12 h-12 rounded-xl bg-[#8B5CF6]/20 flex items-center justify-center text-2xl">
-              📋
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-medium text-[#FAFAFA]">Rapports</div>
-              <div className="text-xs text-[#6B7280]">
-                {recentCount} séance{recentCount > 1 ? "s" : ""} · Résumés & suggestions
-              </div>
-            </div>
-            <span className="text-[#6B7280]">›</span>
-          </a>
-
-          <a
-            href="/exercices"
-            className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 active:bg-white/10 transition-colors"
-          >
-            <div className="w-12 h-12 rounded-xl bg-[#22C55E]/20 flex items-center justify-center text-2xl">
-              📚
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-medium text-[#FAFAFA]">Exercices</div>
-              <div className="text-xs text-[#6B7280]">
-                PNL · Hypnose · Dev. perso
-              </div>
-            </div>
-            <span className="text-[#6B7280]">›</span>
-          </a>
-
-          <a
-            href="/agenda"
-            className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 active:bg-white/10 transition-colors"
-          >
-            <div className="w-12 h-12 rounded-xl bg-[#3B82F6]/20 flex items-center justify-center text-2xl">
-              📅
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-medium text-[#FAFAFA]">Agenda</div>
-              <div className="text-xs text-[#6B7280]">
-                Rendez-vous & planning
-              </div>
-            </div>
-            <span className="text-[#6B7280]">›</span>
-          </a>
-        </div>
 
         {/* Sync + QR */}
         <div className="w-full max-w-xs flex flex-col gap-2">
