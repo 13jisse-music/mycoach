@@ -2,6 +2,7 @@
 
 export interface Session {
   id: string;
+  clientId: string | null; // null = pas de client sélectionné
   mode: "music" | "pnl";
   date: string; // ISO
   duration: number; // seconds
@@ -28,6 +29,10 @@ export function saveSession(session: Session): void {
   // Garder max 100 séances
   if (sessions.length > 100) sessions.length = 100;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+}
+
+export function getSessionsByClient(clientId: string): Session[] {
+  return getSessions().filter((s) => s.clientId === clientId);
 }
 
 export function getSession(id: string): Session | null {

@@ -4,23 +4,30 @@ import {
   buildMusicPrompt,
   buildPNLPrompt,
   buildSessionSummaryPrompt,
+  buildCrossSessionPrompt,
 } from "@/lib/prompts";
 
 export async function POST(request: Request) {
-  const { transcript, mode, action } = await request.json();
-
-  if (!transcript) {
-    return NextResponse.json({ error: "Pas de transcription" }, { status: 400 });
-  }
+  const { transcript, mode, action, clientName, summaries } = await request.json();
 
   let prompt: string;
 
-  if (action === "summary") {
+  if (action === "bilan" && clientName && summaries) {
+    prompt = buildCrossSessionPrompt(clientName, mode || "music", summaries);
+  } else if (action === "summary") {
+    if (!transcript) {
+      return NextResponse.json({ error: "Pas de transcription" }, { status: 400 });
+    }
     prompt = buildSessionSummaryPrompt(mode || "music", transcript);
-  } else if (mode === "pnl") {
-    prompt = buildPNLPrompt(transcript);
   } else {
-    prompt = buildMusicPrompt(transcript);
+    if (!transcript) {
+      return NextResponse.json({ error: "Pas de transcription" }, { status: 400 });
+    }
+    if (mode === "pnl") {
+      prompt = buildPNLPrompt(transcript);
+    } else {
+      prompt = buildMusicPrompt(transcript);
+    }
   }
 
   const result = await aiCascade(

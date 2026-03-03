@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { saveSession, getSessions, generateId, type Session } from "@/lib/sessions";
+import { getClients, saveClient, type Client } from "@/lib/clients";
 
 type Mode = "music" | "pnl";
 
@@ -38,7 +39,6 @@ function speak(text: string) {
   utterance.rate = 1.05;
   utterance.pitch = 1;
   utterance.volume = 0.7;
-  // Prefer a French voice
   const voices = window.speechSynthesis.getVoices();
   const frVoice = voices.find(
     (v) => v.lang.startsWith("fr") && v.name.includes("Google")
@@ -59,6 +59,12 @@ export default function SessionPage() {
   const [sessionSaved, setSessionSaved] = useState(false);
   const [recentCount, setRecentCount] = useState(0);
 
+  // Client management
+  const [clients, setClients] = useState<Client[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [showAddClient, setShowAddClient] = useState(false);
+  const [newClientName, setNewClientName] = useState("");
+
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const transcriptRef = useRef("");
   const suggestionsRef = useRef<string[]>([]);
@@ -66,9 +72,10 @@ export default function SessionPage() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shouldRestartRef = useRef(false);
 
-  // Load recent session count
+  // Load clients and session count
   useEffect(() => {
     setRecentCount(getSessions().length);
+    setClients(getClients());
   }, []);
 
   // ─── Timer ─────────────────────────────────────────────────
@@ -90,6 +97,22 @@ export default function SessionPage() {
     const m = Math.floor(s / 60);
     const sec = s % 60;
     return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  // ─── Add client ──────────────────────────────────────────
+  const addClient = () => {
+    if (!newClientName.trim()) return;
+    const client: Client = {
+      id: generateId(),
+      name: newClientName.trim(),
+      notes: "",
+      createdAt: new Date().toISOString(),
+    };
+    saveClient(client);
+    setClients(getClients());
+    setSelectedClientId(client.id);
+    setNewClientName("");
+    setShowAddClient(false);
   };
 
   // ─── Start listening ───────────────────────────────────────
@@ -120,7 +143,6 @@ export default function SessionPage() {
     };
 
     recognition.onend = () => {
-      // Auto-restart if still in session
       if (shouldRestartRef.current) {
         try {
           recognition.start();
@@ -161,7 +183,7 @@ export default function SessionPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          transcript: transcriptRef.current.slice(-2000), // Dernier contexte
+          transcript: transcriptRef.current.slice(-2000),
           mode,
         }),
       });
@@ -169,7 +191,6 @@ export default function SessionPage() {
       setLastSuggestion(data.text);
       if (data.text) suggestionsRef.current.push(data.text);
 
-      // Chuchote la réponse dans les lunettes (via Bluetooth)
       if (speakEnabled && data.text) {
         speak(data.text);
       }
@@ -206,9 +227,9 @@ export default function SessionPage() {
       setIsAnalyzing(false);
     }
 
-    // Sauvegarde automatique
     const session: Session = {
       id: sessionIdRef.current,
+      clientId: selectedClientId,
       mode,
       date: new Date().toISOString(),
       duration: sessionTime,
@@ -219,7 +240,7 @@ export default function SessionPage() {
     saveSession(session);
     setSessionSaved(true);
     setRecentCount((c) => c + 1);
-  }, [mode, stopListening, sessionTime]);
+  }, [mode, stopListening, sessionTime, selectedClientId]);
 
   // ─── Reset ─────────────────────────────────────────────────
   const resetSession = () => {
@@ -234,15 +255,71 @@ export default function SessionPage() {
     setConsentGiven(false);
   };
 
+  // ─── Selected client name ────────────────────────────────
+  const selectedClient = clients.find((c) => c.id === selectedClientId);
+
   // ─── Consent screen ───────────────────────────────────────
   if (!consentGiven) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center p-6 gap-8">
-        <div className="text-4xl">🎓</div>
-        <h1 className="text-2xl font-bold text-center">MyCoach</h1>
+      <div className="flex min-h-screen flex-col items-center justify-center p-6 gap-6">
+        <img src="/icon.png" alt="JCoach" className="w-20 h-20 rounded-2xl" />
+        <h1 className="text-2xl font-bold text-center">JCoach</h1>
         <p className="text-[#6B7280] text-center max-w-sm text-sm">
           JC Martinez — Coaching vocal & Développement personnel
         </p>
+
+        {/* Client selector */}
+        <div className="w-full max-w-xs">
+          <label className="text-xs text-[#6B7280] uppercase tracking-wide mb-2 block">
+            Client
+          </label>
+          {!showAddClient ? (
+            <div className="flex flex-col gap-2">
+              <select
+                value={selectedClientId || ""}
+                onChange={(e) => setSelectedClientId(e.target.value || null)}
+                className="w-full bg-white/10 text-[#FAFAFA] rounded-xl px-4 py-3 text-sm border border-white/10 focus:outline-none focus:border-[#C9A84C]/50"
+              >
+                <option value="">— Sans client —</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => setShowAddClient(true)}
+                className="text-xs text-[#C9A84C] py-1"
+              >
+                + Nouveau client
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addClient()}
+                placeholder="Nom du client"
+                autoFocus
+                className="flex-1 bg-white/10 text-[#FAFAFA] rounded-xl px-4 py-3 text-sm border border-white/10 focus:outline-none focus:border-[#C9A84C]/50"
+              />
+              <button
+                onClick={addClient}
+                className="px-4 py-3 bg-[#C9A84C] text-black rounded-xl text-sm font-medium"
+              >
+                OK
+              </button>
+              <button
+                onClick={() => { setShowAddClient(false); setNewClientName(""); }}
+                className="px-3 py-3 bg-white/10 rounded-xl text-sm text-[#6B7280]"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Mode selector */}
         <div className="flex gap-3">
@@ -292,15 +369,25 @@ export default function SessionPage() {
           de notes assistée par IA.
         </p>
 
-        {/* Historique link */}
-        {recentCount > 0 && (
-          <a
-            href="/historique"
-            className="text-sm text-[#6B7280] underline underline-offset-4"
-          >
-            📋 {recentCount} séance{recentCount > 1 ? "s" : ""} enregistrée{recentCount > 1 ? "s" : ""}
-          </a>
-        )}
+        {/* Navigation links */}
+        <div className="flex gap-4">
+          {recentCount > 0 && (
+            <a
+              href="/historique"
+              className="text-sm text-[#6B7280] underline underline-offset-4"
+            >
+              📋 {recentCount} séance{recentCount > 1 ? "s" : ""}
+            </a>
+          )}
+          {clients.length > 0 && (
+            <a
+              href="/clients"
+              className="text-sm text-[#6B7280] underline underline-offset-4"
+            >
+              👥 {clients.length} client{clients.length > 1 ? "s" : ""}
+            </a>
+          )}
+        </div>
       </div>
     );
   }
@@ -323,6 +410,11 @@ export default function SessionPage() {
           <span className="text-sm font-medium" style={{ color: accentColor }}>
             {mode === "music" ? "🎵 Musique" : "🧠 Dev. perso"}
           </span>
+          {selectedClient && (
+            <span className="text-xs text-[#6B7280] bg-white/5 px-2 py-0.5 rounded-lg">
+              {selectedClient.name}
+            </span>
+          )}
         </div>
         <span className="font-mono text-lg text-[#6B7280]">
           {formatTime(sessionTime)}
@@ -379,7 +471,7 @@ export default function SessionPage() {
             {isListening ? "⏸" : "🎙"}
           </button>
 
-          {/* ASK AI — Le bouton magique (1 tap = suggestion dans l'oreille) */}
+          {/* ASK AI — Le bouton magique */}
           <button
             onClick={askAI}
             disabled={isAnalyzing || !transcript}
@@ -409,10 +501,10 @@ export default function SessionPage() {
         <div className="flex justify-center gap-3 mt-3">
           {sessionSaved ? (
             <a
-              href="/historique"
+              href={selectedClientId ? `/clients/${selectedClientId}` : "/historique"}
               className="text-xs text-[#22C55E] px-3 py-1.5 rounded-lg bg-[#22C55E]/10"
             >
-              ✓ Sauvegardée — Voir l&apos;historique
+              ✓ Sauvegardée — Voir {selectedClient ? selectedClient.name : "l\u0027historique"}
             </a>
           ) : (
             <button

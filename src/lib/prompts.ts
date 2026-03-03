@@ -45,6 +45,31 @@ Identifie :
 Sois bref (3 phrases max), pratique et bienveillant. Réponds en français.`;
 }
 
+export function buildCrossSessionPrompt(
+  clientName: string,
+  mode: string,
+  summaries: { date: string; summary: string }[]
+): string {
+  const modeLabel = mode === "pnl" ? "développement personnel" : "coaching musical";
+  const sessionsList = summaries
+    .map((s, i) => `--- Séance ${i + 1} (${s.date}) ---\n${s.summary}`)
+    .join("\n\n");
+
+  return `Tu es un assistant pour un praticien en ${modeLabel}.
+Voici les résumés de toutes les séances avec le client "${clientName}" :
+
+${sessionsList}
+
+Génère un bilan global :
+1. **Évolution** : comment le client a progressé au fil des séances
+2. **Patterns récurrents** : thèmes, blocages ou forces qui reviennent
+3. **Points forts** : ce qui fonctionne bien
+4. **Axes d'amélioration** : ce qui reste à travailler
+5. **Recommandations** : suggestions concrètes pour les prochaines séances
+
+Sois synthétique et professionnel. Réponds en français.`;
+}
+
 export function buildSessionSummaryPrompt(
   mode: string,
   transcript: string
