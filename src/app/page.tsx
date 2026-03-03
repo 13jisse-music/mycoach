@@ -406,22 +406,43 @@ export default function SessionPage() {
           de notes assistée par IA.
         </p>
 
-        {/* Navigation + Sync */}
+        {/* Dossiers — gros boutons bien visibles */}
+        <div className="w-full max-w-xs flex flex-col gap-3">
+          <a
+            href="/clients"
+            className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 active:bg-white/10 transition-colors"
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#C9A84C]/20 flex items-center justify-center text-2xl">
+              👥
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-medium text-[#FAFAFA]">Mes clients</div>
+              <div className="text-xs text-[#6B7280]">
+                {clients.length} client{clients.length > 1 ? "s" : ""} · Dossiers & bilans IA
+              </div>
+            </div>
+            <span className="text-[#6B7280]">›</span>
+          </a>
+
+          <a
+            href="/historique"
+            className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 active:bg-white/10 transition-colors"
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#8B5CF6]/20 flex items-center justify-center text-2xl">
+              📋
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-medium text-[#FAFAFA]">Rapports</div>
+              <div className="text-xs text-[#6B7280]">
+                {recentCount} séance{recentCount > 1 ? "s" : ""} · Résumés & suggestions
+              </div>
+            </div>
+            <span className="text-[#6B7280]">›</span>
+          </a>
+        </div>
+
+        {/* Sync + QR */}
         <div className="w-full max-w-xs flex flex-col gap-2">
-          <div className="flex gap-2">
-            <a
-              href="/historique"
-              className="flex-1 text-center text-sm py-2.5 rounded-xl bg-white/5 text-[#6B7280]"
-            >
-              📋 {recentCount} séance{recentCount > 1 ? "s" : ""}
-            </a>
-            <a
-              href="/clients"
-              className="flex-1 text-center text-sm py-2.5 rounded-xl bg-white/5 text-[#6B7280]"
-            >
-              👥 {clients.length} client{clients.length > 1 ? "s" : ""}
-            </a>
-          </div>
           <button
             onClick={handleSync}
             disabled={isSyncing}
