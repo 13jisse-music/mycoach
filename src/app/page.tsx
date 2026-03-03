@@ -85,6 +85,8 @@ export default function SessionPage() {
   const [syncStatus, setSyncStatus] = useState("");
   const [showQR, setShowQR] = useState(false);
 
+  const [micLabel, setMicLabel] = useState("");
+
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const transcriptRef = useRef("");
   const suggestionsRef = useRef<string[]>([]);
@@ -92,6 +94,8 @@ export default function SessionPage() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shouldRestartRef = useRef(false);
   const isSpeakingRef = useRef(false); // true = TTS en cours, ignorer le mic
+  const mediaStreamRef = useRef<MediaStream | null>(null); // Keep mic stream alive (prevents beep on restart)
+  const lastSegmentsRef = useRef<string[]>([]); // Track last segments for dedup
 
   // Load clients and session count (local first, then sync from Supabase)
   useEffect(() => {
@@ -139,12 +143,55 @@ export default function SessionPage() {
     setShowAddClient(false);
   };
 
+  // ─── Acquire preferred mic (Bluetooth/lunettes priority) ───
+  const acquireMic = useCallback(async () => {
+    try {
+      // First get permission with default mic
+      const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      tempStream.getTracks().forEach((t) => t.stop());
+
+      // Enumerate devices to find Bluetooth
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioInputs = devices.filter((d) => d.kind === "audioinput");
+
+      // Prefer Bluetooth (Ray-Ban Meta, headset, etc.)
+      const btMic = audioInputs.find((d) => {
+        const label = d.label.toLowerCase();
+        return (
+          label.includes("bluetooth") ||
+          label.includes("ray-ban") ||
+          label.includes("meta") ||
+          label.includes("headset") ||
+          label.includes("casque") ||
+          label.includes("bt ")
+        );
+      });
+
+      const constraints: MediaStreamConstraints = btMic
+        ? { audio: { deviceId: { exact: btMic.deviceId } } }
+        : { audio: true };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      mediaStreamRef.current = stream;
+      setMicLabel(btMic ? btMic.label : audioInputs[0]?.label || "Micro");
+      return stream;
+    } catch {
+      setMicLabel("Micro par défaut");
+      return null;
+    }
+  }, []);
+
   // ─── Start listening ───────────────────────────────────────
-  const startListening = useCallback(() => {
+  const startListening = useCallback(async () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
       alert("Ce navigateur ne supporte pas la reconnaissance vocale. Utilise Chrome.");
       return;
+    }
+
+    // Acquire mic stream first (selects Bluetooth, prevents beep on restart)
+    if (!mediaStreamRef.current) {
+      await acquireMic();
     }
 
     const recognition = new SR();
@@ -162,9 +209,25 @@ export default function SessionPage() {
         if (result.isFinal) {
           const segment = result[0].transcript.trim();
           if (!segment) continue;
-          // Deduplication: skip if this segment already appears at the end of transcript
+
+          // Dedup 1: exact match at end of transcript
           const currentEnd = transcriptRef.current.trim().slice(-(segment.length + 30));
           if (currentEnd.includes(segment)) continue;
+
+          // Dedup 2: similarity with recent segments (catches dual-mic near-duplicates)
+          const normalized = segment.toLowerCase().replace(/[.,!?;:]/g, "").trim();
+          const isDup = lastSegmentsRef.current.some((prev) => {
+            const prevNorm = prev.toLowerCase().replace(/[.,!?;:]/g, "").trim();
+            return (
+              normalized === prevNorm ||
+              normalized.includes(prevNorm) ||
+              prevNorm.includes(normalized)
+            );
+          });
+          if (isDup) continue;
+
+          lastSegmentsRef.current.push(segment);
+          if (lastSegmentsRef.current.length > 5) lastSegmentsRef.current.shift();
           finalText += segment + " ";
         }
       }
@@ -176,11 +239,16 @@ export default function SessionPage() {
 
     recognition.onend = () => {
       if (shouldRestartRef.current) {
-        try {
-          recognition.start();
-        } catch {
-          // ignore
-        }
+        // Small delay to avoid Chrome beep on restart
+        setTimeout(() => {
+          if (shouldRestartRef.current) {
+            try {
+              recognition.start();
+            } catch {
+              // ignore
+            }
+          }
+        }, 200);
       }
     };
 
@@ -204,12 +272,17 @@ export default function SessionPage() {
     resumeRecognitionFn = () => {
       isSpeakingRef.current = false;
     };
-  }, []);
+  }, [acquireMic]);
 
   // ─── Stop listening ────────────────────────────────────────
   const stopListening = useCallback(() => {
     shouldRestartRef.current = false;
     recognitionRef.current?.stop();
+    // Release mic stream to stop any audio routing
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+      mediaStreamRef.current = null;
+    }
     setIsListening(false);
   }, []);
 
@@ -288,11 +361,13 @@ export default function SessionPage() {
     setTranscript("");
     transcriptRef.current = "";
     suggestionsRef.current = [];
+    lastSegmentsRef.current = [];
     sessionIdRef.current = generateId();
     setLastSuggestion("");
     setSessionTime(0);
     setSessionSaved(false);
     setConsentGiven(false);
+    setMicLabel("");
   };
 
   // ─── Manual sync ──────────────────────────────────────────
@@ -463,7 +538,7 @@ export default function SessionPage() {
             {selectedClient ? selectedClient.name : "Séance en cours"}
           </span>
           <span className="text-xs text-[#6B7280]">
-            {isListening ? "En écoute" : "Pause"}
+            {isListening ? (micLabel.toLowerCase().includes("bluetooth") || micLabel.toLowerCase().includes("headset") ? "🎧" : "🎙") : "⏸"}
           </span>
         </div>
         <span className="font-mono text-lg text-[#6B7280]">
